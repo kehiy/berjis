@@ -1,7 +1,9 @@
 package dns
 
-import(
+import (
+	"crypto/rand"
 	"fmt"
+	"math/big"
 	"net"
 
 	"golang.org/x/net/dns/dnsmessage"
@@ -14,5 +16,26 @@ func handlePacket(pc net.PacketConn, addr net.Addr, buf []byte) error {
 }
 
 func outgoingDnsQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessage.Parser, *dnsmessage.Header, error) {
+	max := uint16(^uint16(0))
+
+	// generate a random number max to unit16
+	randomNumber, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// convert random number type from bigint to uint16
+	id := uint16(randomNumber.Int64())
+
+	// define a UDP message (question)
+	msg := dnsmessage.Message{
+		Header: dnsmessage.Header{
+			ID: id,
+			Response: false,
+			OpCode: dnsmessage.OpCode(0),
+		},
+		Questions: []dnsmessage.Question{question},
+	}
+	
 	return nil, nil, nil
 }
