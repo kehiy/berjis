@@ -2,8 +2,9 @@ package dns
 
 import (
 	"crypto/rand"
-	"fmt"
 	"math/big"
+	"bufio"
+	"fmt"
 	"net"
 
 	"golang.org/x/net/dns/dnsmessage"
@@ -37,5 +38,57 @@ func outgoingDnsQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessa
 		Questions: []dnsmessage.Question{question},
 	}
 	
-	return nil, nil, nil
+	// pack message to send to root server
+	buf, err := msg.Pack()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// make connection with servers and send message (for each servers)
+	//* connections is with udp protocol
+	var conn net.Conn
+	for _, server := range servers{
+		conn, err = net.Dial("udp", server.String() + ":53" /*dns port*/)
+		if err == nil {
+			break
+		}
+	}
+	if conn == nil{
+		return nil, nil, fmt.Errorf("faild to make connection to servers: %s", err)
+	}
+	// here we have the connection!
+	_, err = conn.Write(buf)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// read answer  from connection
+	answer := make([]byte, 512)
+	n, err := bufio.NewReader(conn).Read(answer)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	conn.Close()
+
+	var p dnsmessage.Parser
+	header, err := p.Start(answer[:n])
+	if err != nil {
+		return nil, nil, fmt.Errorf("parser start error: %s", err)
+	}
+
+	questions, err := p.AllQuestions()
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(questions) != len(msg.Questions){
+		return nil, nil, fmt.Errorf("answer packet dosen't have the same amount of questions")
+	}
+	
+	err = p.SkipAllQuestions()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return &p, &header, nil
 }
