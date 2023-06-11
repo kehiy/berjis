@@ -2,27 +2,26 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net"
 
 	"github.com/kehiy/dns-server/pkg"
 )
 
-func main(){
-	fmt.Println("Serer running...")
-
-	packetConnection, err := net.ListenPacket("udp", ":53")
+func main() {
+	p, err := net.ListenPacket("udp", ":53")
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
-	defer packetConnection.Close()
+	defer p.Close()
 
 	for {
 		buf := make([]byte, 512)
-		bytesRead, addr, err := packetConnection.ReadFrom(buf)
+		n, addr, err := p.ReadFrom(buf)
 		if err != nil {
-			fmt.Printf("Read error from %s: %s\n", addr.String(), err)
+			fmt.Printf("Connection error [%s]: %s\n", addr.String(), err)
 			continue
 		}
-		go dns.HandlePacket(packetConnection, addr, buf[:bytesRead])
+		go dns.HandlePacket(p, addr, buf[:n])
 	}
 }

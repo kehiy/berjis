@@ -54,7 +54,11 @@ func handlePacket(pc net.PacketConn, addr net.Addr, buf []byte) error {
 
 
 func dnsQuery(servers []net.IP, question dnsmessage.Question)(*dnsmessage.Message, error){
-	return nil, nil
+	return &dnsmessage.Message{
+		Header: dnsmessage.Header{
+			RCode: dnsmessage.RCodeNameError,
+		},
+	}, nil
 }
 
 func outgoingDnsQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessage.Parser, *dnsmessage.Header, error) {
