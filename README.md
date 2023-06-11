@@ -7,12 +7,13 @@ DNS server written in Golang
 go run ./cmd/main.go
 ```
 
-then:
+### then:
 ```
 nslookup example.com 127.0.0.1
 ```
 
-you can use dig or host in linux and mac.
+you can use `dig` or `host` in linux and mac.
+
 
 
 # Contributing
