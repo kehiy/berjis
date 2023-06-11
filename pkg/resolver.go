@@ -52,14 +52,91 @@ func handlePacket(pc net.PacketConn, addr net.Addr, buf []byte) error {
 	return nil
 }
 
+func dnsQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessage.Message, error) {
+	
+	for i := 0; i < 3; i++ {
 
-func dnsQuery(servers []net.IP, question dnsmessage.Question)(*dnsmessage.Message, error){
+		dnsAnswer, header, err := outgoingDnsQuery(servers, question)
+		if err != nil {
+			return nil, err
+		}
+
+		parsedAnswers, err := dnsAnswer.AllAnswers()
+		if err != nil {
+			return nil, err
+		}
+
+		//! if the header is Authoritative we send the ip's back here.
+		if header.Authoritative {
+			return &dnsmessage.Message{
+				Header:  dnsmessage.Header{Response: true},
+				Answers: parsedAnswers,
+			}, nil
+		}
+
+		authorities, err := dnsAnswer.AllAuthorities()
+		if err != nil {
+			return nil, err
+		}
+
+		//* if there is no authority we send a server failure code
+		if len(authorities) == 0 {
+			return &dnsmessage.Message{
+				Header: dnsmessage.Header{RCode: dnsmessage.RCodeNameError},
+			}, nil
+		}
+
+		//* get name servers in the response
+		nameservers := make([]string, len(authorities))
+		for k, authority := range authorities {
+			if authority.Header.Type == dnsmessage.TypeNS {
+				nameservers[k] = authority.Body.(*dnsmessage.NSResource).NS.String()
+			}
+		}
+
+		additionals, err := dnsAnswer.AllAdditionals()
+		if err != nil {
+			return nil, err
+		}
+
+		newResolverServersFound := false
+
+		//* change servers list to new name servers get from previous server...
+		servers = []net.IP{}
+		for _, additional := range additionals {
+			if additional.Header.Type == dnsmessage.TypeA {
+				for _, nameserver := range nameservers {
+					if additional.Header.Name.String() == nameserver {
+						newResolverServersFound = true
+						servers = append(servers, additional.Body.(*dnsmessage.AResource).A[:])
+					}
+				}
+			}
+		}
+
+		if !newResolverServersFound {
+			for _, nameserver := range nameservers {
+				if !newResolverServersFound {
+					response, err := dnsQuery(getRootServers(), dnsmessage.Question{Name: dnsmessage.MustNewName(nameserver), Type: dnsmessage.TypeA, Class: dnsmessage.ClassINET})
+					if err != nil {
+						fmt.Printf("warning: lookup of nameserver %s failed: %err\n", nameserver, err)
+					} else {
+						newResolverServersFound = true
+						for _, answer := range response.Answers {
+							if answer.Header.Type == dnsmessage.TypeA {
+								servers = append(servers, answer.Body.(*dnsmessage.AResource).A[:])
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 	return &dnsmessage.Message{
-		Header: dnsmessage.Header{
-			RCode: dnsmessage.RCodeNameError,
-		},
+		Header: dnsmessage.Header{RCode: dnsmessage.RCodeServerFailure},
 	}, nil
 }
+
 
 func outgoingDnsQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessage.Parser, *dnsmessage.Header, error) {
 	max := uint16(^uint16(0))
@@ -76,13 +153,13 @@ func outgoingDnsQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessa
 	// define a UDP message (question)
 	msg := dnsmessage.Message{
 		Header: dnsmessage.Header{
-			ID: id,
+			ID:       id,
 			Response: false,
-			OpCode: dnsmessage.OpCode(0),
+			OpCode:   dnsmessage.OpCode(0),
 		},
 		Questions: []dnsmessage.Question{question},
 	}
-	
+
 	// pack message to send to root server
 	buf, err := msg.Pack()
 	if err != nil {
@@ -92,13 +169,13 @@ func outgoingDnsQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessa
 	// make connection with servers and send message (for each servers)
 	//* connections is with udp protocol
 	var conn net.Conn
-	for _, server := range servers{
-		conn, err = net.Dial("udp", server.String() + ":53" /*dns port*/)
+	for _, server := range servers {
+		conn, err = net.Dial("udp", server.String()+":53" /*dns port*/)
 		if err == nil {
 			break
 		}
 	}
-	if conn == nil{
+	if conn == nil {
 		return nil, nil, fmt.Errorf("faild to make connection to servers: %s", err)
 	}
 	// here we have the connection!
@@ -126,10 +203,10 @@ func outgoingDnsQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessa
 	if err != nil {
 		return nil, nil, err
 	}
-	if len(questions) != len(msg.Questions){
+	if len(questions) != len(msg.Questions) {
 		return nil, nil, fmt.Errorf("answer packet dosen't have the same amount of questions")
 	}
-	
+
 	err = p.SkipAllQuestions()
 	if err != nil {
 		return nil, nil, err
@@ -138,10 +215,10 @@ func outgoingDnsQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessa
 	return &p, &header, nil
 }
 
-//* make a loop over ROOT SERVERS list and return a slice of root servers ip
+// * make a loop over ROOT SERVERS list and return a slice of root servers ip
 func getRootServers() []net.IP {
 	rootServers := []net.IP{}
-	for _,rootServer := range strings.Split(ROOT_SERVERS, ","){
+	for _, rootServer := range strings.Split(ROOT_SERVERS, ",") {
 		rootServers = append(rootServers, net.ParseIP(rootServer))
 	}
 	return rootServers
