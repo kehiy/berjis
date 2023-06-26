@@ -1,5 +1,5 @@
-# dns-server
-DNS server written in Golang
+# berjis-dns
+DNS written in Golang
 
 # how to use :
 
@@ -12,7 +12,7 @@ go run ./cmd/main.go
 nslookup example.com 127.0.0.1
 ```
 
-you can use `dig` or `host` in linux and mac.
+you can use `dig` or `host` also.
 
 
 
