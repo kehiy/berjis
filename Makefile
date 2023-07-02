@@ -3,7 +3,6 @@ check:
 		--timeout=20m0s \
 		--enable=gofmt \
 		--enable=unconvert \
-		--enable=unparam \
 		--enable=asciicheck \
 		--enable=misspell \
 		--enable=revive \

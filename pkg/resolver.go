@@ -53,10 +53,9 @@ func handlePacket(pc net.PacketConn, addr net.Addr, buf []byte) error {
 }
 
 func dnsQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessage.Message, error) {
-
 	for i := 0; i < 3; i++ {
 
-		dnsAnswer, header, err := outgoingDnsQuery(servers, question)
+		dnsAnswer, header, err := outgoingDNSQuery(servers, question)
 		if err != nil {
 			return nil, err
 		}
@@ -137,8 +136,8 @@ func dnsQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessage.Messa
 	}, nil
 }
 
-func outgoingDnsQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessage.Parser, *dnsmessage.Header, error) {
-	max := uint16(^uint16(0))
+func outgoingDNSQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessage.Parser, *dnsmessage.Header, error) {
+	max := ^uint16(0)
 
 	// generate a random number max to unit16
 	randomNumber, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
