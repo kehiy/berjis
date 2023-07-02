@@ -54,7 +54,6 @@ func handlePacket(pc net.PacketConn, addr net.Addr, buf []byte) error {
 
 func dnsQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessage.Message, error) {
 	for i := 0; i < 3; i++ {
-
 		dnsAnswer, header, err := outgoingDNSQuery(servers, question)
 		if err != nil {
 			return nil, err
