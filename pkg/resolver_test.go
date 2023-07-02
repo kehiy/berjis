@@ -85,7 +85,7 @@ func TestOutgoingDnsQuery(t *testing.T) {
 		t.Fatalf("No root servers found")
 	}
 	servers := []net.IP{net.ParseIP(rootServers[0])}
-	dnsAnswer, header, err := outgoingDnsQuery(servers, question)
+	dnsAnswer, header, err := outgoingDNSQuery(servers, question)
 	if err != nil {
 		t.Fatalf("outgoingDnsQuery error: %s", err)
 	}
@@ -96,7 +96,7 @@ func TestOutgoingDnsQuery(t *testing.T) {
 		t.Fatalf("no answer found")
 	}
 	if header.RCode != dnsmessage.RCodeSuccess {
-		t.Fatalf("response was not succesful (maybe the DNS server has changed?)")
+		t.Fatalf("response was not successful (maybe the DNS server has changed?)")
 	}
 	err = dnsAnswer.SkipAllAnswers()
 	if err != nil {
