@@ -1,4 +1,4 @@
-package dns
+package core
 
 import (
 	"bufio"
@@ -212,7 +212,7 @@ func outgoingDNSQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessa
 	return &p, &header, nil
 }
 
-// * make a loop over ROOT SERVERS list and return a slice of root servers ip
+// * make a loop over ROOT SERVERS list and return a slice of root servers ip.
 func getRootServers() []net.IP {
 	rootServers := []net.IP{}
 	for _, rootServer := range strings.Split(ROOT_SERVERS, ",") {

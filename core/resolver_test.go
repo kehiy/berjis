@@ -1,4 +1,4 @@
-package dns
+package core
 
 import (
 	"crypto/rand"
@@ -24,15 +24,19 @@ func (m *MockPacketConn) Close() error {
 func (m *MockPacketConn) ReadFrom(p []byte) (n int, addr net.Addr, err error) {
 	return 0, nil, nil
 }
+
 func (m *MockPacketConn) LocalAddr() net.Addr {
 	return nil
 }
+
 func (m *MockPacketConn) SetDeadline(t time.Time) error {
 	return nil
 }
+
 func (m *MockPacketConn) SetReadDeadline(t time.Time) error {
 	return nil
 }
+
 func (m *MockPacketConn) SetWriteDeadline(t time.Time) error {
 	return nil
 }

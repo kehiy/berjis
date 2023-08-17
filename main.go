@@ -5,7 +5,7 @@ import (
 	"log"
 	"net"
 
-	"github.com/kehiy/dns-server/pkg"
+	"github.com/kehiy/dns-server/core"
 )
 
 func main() {
@@ -22,6 +22,6 @@ func main() {
 			fmt.Printf("Connection error [%s]: %s\n", addr.String(), err)
 			continue
 		}
-		go dns.HandlePacket(p, addr, buf[:n])
+		go core.HandlePacket(p, addr, buf[:n])
 	}
 }
