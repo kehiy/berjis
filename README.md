@@ -4,7 +4,7 @@ DNS written in Golang
 # how to use :
 
 ```
-go run ./cmd/main.go
+go run main.go
 ```
 
 ### then:
