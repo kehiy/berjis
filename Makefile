@@ -1,19 +1,24 @@
+PACKAGES=$(shell go list ./... | grep -v 'tests')
+
+### Tools needed for development
+devtools:
+	@echo "Installing devtools"
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+### Testing
+unit_test:
+	go test $(PACKAGES)
+
+test:
+	go test ./... -covermode=atomic
+
+test_race:
+	go test ./... --race
+
+### Formatting, linting, and vetting
+fmt:
+	gofumpt -l -w .
+
 check:
-	golangci-lint run \
-		--timeout=20m0s \
-		--exclude='unused' \
-		--enable=gofmt \
-		--enable=unconvert \
-		--enable=asciicheck \
-		--enable=misspell \
-		--enable=revive \
-		--enable=decorder \
-		--enable=reassign \
-		--enable=usestdlibvars \
-		--enable=nilerr \
-		--enable=gosec \
-		--enable=exportloopref \
-		--enable=whitespace \
-		--enable=goimports \
-		--enable=gocyclo \
-		--enable=lll
+	golangci-lint run --build-tags "${BUILD_TAG}" --timeout=20m0s
+
