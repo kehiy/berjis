@@ -11,7 +11,8 @@ import (
 	"golang.org/x/net/dns/dnsmessage"
 )
 
-const ROOT_SERVERS = "198.41.0.4,199.9.14.201,192.33.4.12,199.7.91.13,192.203.230.10,192.5.5.241,192.112.36.4,198.97.190.53"
+const ROOTSERVERS = `198.41.0.4,199.9.14.201,192.33.4.12,199.7.91.13,192.203.230.10,192.5.5.241,
+	192.112.36.4,198.97.190.53`
 
 func HandlePacket(pc net.PacketConn, addr net.Addr, buf []byte) {
 	//* send incoming packets to handlePacket function
@@ -115,7 +116,11 @@ func dnsQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessage.Messa
 		if !newResolverServersFound {
 			for _, nameserver := range nameservers {
 				if !newResolverServersFound {
-					response, err := dnsQuery(getRootServers(), dnsmessage.Question{Name: dnsmessage.MustNewName(nameserver), Type: dnsmessage.TypeA, Class: dnsmessage.ClassINET})
+					response, err := dnsQuery(getRootServers(),
+						dnsmessage.Question{
+							Name: dnsmessage.MustNewName(nameserver),
+							Type: dnsmessage.TypeA, Class: dnsmessage.ClassINET,
+						})
 					if err != nil {
 						fmt.Printf("warning: lookup of nameserver %s failed: %err\n", nameserver, err)
 					} else {
@@ -215,7 +220,7 @@ func outgoingDNSQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessa
 // * make a loop over ROOT SERVERS list and return a slice of root servers ip.
 func getRootServers() []net.IP {
 	rootServers := []net.IP{}
-	for _, rootServer := range strings.Split(ROOT_SERVERS, ",") {
+	for _, rootServer := range strings.Split(ROOTSERVERS, ",") {
 		rootServers = append(rootServers, net.ParseIP(rootServer))
 	}
 	return rootServers

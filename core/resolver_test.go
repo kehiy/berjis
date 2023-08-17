@@ -84,7 +84,7 @@ func TestOutgoingDnsQuery(t *testing.T) {
 		Type:  dnsmessage.TypeNS,
 		Class: dnsmessage.ClassINET,
 	}
-	rootServers := strings.Split(ROOT_SERVERS, ",")
+	rootServers := strings.Split(ROOTSERVERS, ",")
 	if len(rootServers) == 0 {
 		t.Fatalf("No root servers found")
 	}
