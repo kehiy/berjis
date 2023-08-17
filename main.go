@@ -1,17 +1,16 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"net"
 
 	"github.com/kehiy/dns-server/core"
+	"github.com/kehiy/dns-server/logger"
 )
 
 func main() {
 	pc, err := net.ListenPacket("udp", ":53")
 	if err != nil {
-		log.Fatal(err)
+		logger.Panic("can't run the DNS server:", "error", err)
 	}
 	defer pc.Close()
 
@@ -19,7 +18,7 @@ func main() {
 		buf := make([]byte, 512)
 		n, addr, err := pc.ReadFrom(buf)
 		if err != nil {
-			fmt.Printf("Connection error [%s]: %s\n", addr.String(), err)
+			logger.Info("read error", "from", addr.String(), "network", addr.Network(), "error", err)
 			continue
 		}
 		go core.HandlePacket(pc, addr, buf[:n])
