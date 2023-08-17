@@ -13,7 +13,7 @@ import (
 
 type MockPacketConn struct{}
 
-func (m *MockPacketConn) WriteTo(p []byte, addr net.Addr) (n int, err error) {
+func (m *MockPacketConn) WriteTo(_ []byte, _ net.Addr) (n int, err error) {
 	return 0, nil
 }
 
@@ -21,7 +21,7 @@ func (m *MockPacketConn) Close() error {
 	return nil
 }
 
-func (m *MockPacketConn) ReadFrom(p []byte) (n int, addr net.Addr, err error) {
+func (m *MockPacketConn) ReadFrom(_ []byte) (n int, addr net.Addr, err error) {
 	return 0, nil, nil
 }
 
@@ -29,15 +29,15 @@ func (m *MockPacketConn) LocalAddr() net.Addr {
 	return nil
 }
 
-func (m *MockPacketConn) SetDeadline(t time.Time) error {
+func (m *MockPacketConn) SetDeadline(_ time.Time) error {
 	return nil
 }
 
-func (m *MockPacketConn) SetReadDeadline(t time.Time) error {
+func (m *MockPacketConn) SetReadDeadline(_ time.Time) error {
 	return nil
 }
 
-func (m *MockPacketConn) SetWriteDeadline(t time.Time) error {
+func (m *MockPacketConn) SetWriteDeadline(_ time.Time) error {
 	return nil
 }
 

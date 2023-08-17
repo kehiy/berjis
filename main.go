@@ -9,19 +9,19 @@ import (
 )
 
 func main() {
-	p, err := net.ListenPacket("udp", ":53")
+	pc, err := net.ListenPacket("udp", ":53")
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer p.Close()
+	defer pc.Close()
 
 	for {
 		buf := make([]byte, 512)
-		n, addr, err := p.ReadFrom(buf)
+		n, addr, err := pc.ReadFrom(buf)
 		if err != nil {
 			fmt.Printf("Connection error [%s]: %s\n", addr.String(), err)
 			continue
 		}
-		go core.HandlePacket(p, addr, buf[:n])
+		go core.HandlePacket(pc, addr, buf[:n])
 	}
 }
