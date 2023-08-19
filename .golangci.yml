@@ -1,5 +1,7 @@
 linters:
   enable-all: true
+  lines:
+    - max: 10
   disable:
     - scopelint # deprecated
     - maligned # deprecated
