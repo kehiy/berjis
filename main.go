@@ -3,8 +3,8 @@ package main
 import (
 	"net"
 
-	"github.com/kehiy/dns-server/core"
-	"github.com/kehiy/dns-server/logger"
+	"github.com/kehiy/berjis/core"
+	"github.com/kehiy/berjis/logger"
 )
 
 func main() {
@@ -21,6 +21,6 @@ func main() {
 			logger.Info("read error", "from", addr.String(), "network", addr.Network(), "error", err)
 			continue
 		}
-		go core.HandlePacket(pc, addr, buf[:n])
+		go core.HandlePacketOut(pc, addr, buf[:n])
 	}
 }

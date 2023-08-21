@@ -1,4 +1,4 @@
-package core
+package core_test
 
 import (
 	"crypto/rand"
@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/kehiy/berjis/core"
 	"golang.org/x/net/dns/dnsmessage"
 )
 
@@ -71,7 +72,7 @@ func TestHandlePacket(t *testing.T) {
 			t.Fatalf("Pack error: %s", err)
 		}
 
-		err = handlePacket(&MockPacketConn{}, &net.IPAddr{IP: net.ParseIP("127.0.0.1")}, buf)
+		err = core.HandlePacketIn(&MockPacketConn{}, &net.IPAddr{IP: net.ParseIP("127.0.0.1")}, buf)
 		if err != nil {
 			t.Fatalf("serve error: %s", err)
 		}
@@ -84,12 +85,12 @@ func TestOutgoingDnsQuery(t *testing.T) {
 		Type:  dnsmessage.TypeNS,
 		Class: dnsmessage.ClassINET,
 	}
-	rootServers := strings.Split(ROOTSERVERS, ",")
+	rootServers := strings.Split(core.ROOTSERVERS, ",")
 	if len(rootServers) == 0 {
 		t.Fatalf("No root servers found")
 	}
 	servers := []net.IP{net.ParseIP(rootServers[0])}
-	dnsAnswer, header, err := outgoingDNSQuery(servers, question)
+	dnsAnswer, header, err := core.OutgoingDNSQuery(servers, question)
 	if err != nil {
 		t.Fatalf("outgoingDnsQuery error: %s", err)
 	}

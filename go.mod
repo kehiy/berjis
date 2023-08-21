@@ -1,4 +1,4 @@
-module github.com/kehiy/dns-server
+module github.com/kehiy/berjis
 
 go 1.20
 

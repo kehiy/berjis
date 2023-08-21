@@ -8,21 +8,21 @@ import (
 	"net"
 	"strings"
 
-	"github.com/kehiy/dns-server/logger"
+	"github.com/kehiy/berjis/logger"
 	"golang.org/x/net/dns/dnsmessage"
 )
 
 const ROOTSERVERS = `198.41.0.4,199.9.14.201,192.33.4.12,199.7.91.13,
 					 192.203.230.10,192.5.5.241,192.112.36.4,198.97.190.53`
 
-func HandlePacket(pc net.PacketConn, addr net.Addr, buf []byte) {
+func HandlePacketOut(pc net.PacketConn, addr net.Addr, buf []byte) {
 	//* send incoming packets to handlePacket function
-	if err := handlePacket(pc, addr, buf); err != nil {
+	if err := HandlePacketIn(pc, addr, buf); err != nil {
 		fmt.Printf("handlePacket error [%s]: %s\n", addr.String(), err)
 	}
 }
 
-func handlePacket(pc net.PacketConn, addr net.Addr, buf []byte) error {
+func HandlePacketIn(pc net.PacketConn, addr net.Addr, buf []byte) error {
 	p := dnsmessage.Parser{}
 	header, err := p.Start(buf)
 	if err != nil {
@@ -34,7 +34,7 @@ func handlePacket(pc net.PacketConn, addr net.Addr, buf []byte) error {
 		return err
 	}
 
-	response, err := dnsQuery(getRootServers(), question)
+	response, err := DNSQuery(getRootServers(), question)
 	if err != nil {
 		return err
 	}
@@ -54,9 +54,9 @@ func handlePacket(pc net.PacketConn, addr net.Addr, buf []byte) error {
 	return nil
 }
 
-func dnsQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessage.Message, error) {
+func DNSQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessage.Message, error) {
 	for i := 0; i < 3; i++ {
-		dnsAnswer, header, err := outgoingDNSQuery(servers, question)
+		dnsAnswer, header, err := OutgoingDNSQuery(servers, question)
 		if err != nil {
 			return nil, err
 		}
@@ -117,7 +117,7 @@ func dnsQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessage.Messa
 		if !newResolverServersFound {
 			for _, nameserver := range nameservers {
 				if !newResolverServersFound {
-					response, err := dnsQuery(getRootServers(),
+					response, err := DNSQuery(getRootServers(),
 						dnsmessage.Question{
 							Name: dnsmessage.MustNewName(nameserver),
 							Type: dnsmessage.TypeA, Class: dnsmessage.ClassINET,
@@ -141,7 +141,7 @@ func dnsQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessage.Messa
 	}, nil
 }
 
-func outgoingDNSQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessage.Parser, *dnsmessage.Header, error) {
+func OutgoingDNSQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessage.Parser, *dnsmessage.Header, error) {
 	max := ^uint16(0)
 
 	// generate a random number max to unit16
@@ -179,7 +179,7 @@ func outgoingDNSQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessa
 		}
 	}
 	if conn == nil {
-		return nil, nil, fmt.Errorf("faild to make connection to servers: %s", err)
+		return nil, nil, fmt.Errorf("faild to make connection to servers: %w", err)
 	}
 	// here we have the connection!
 	_, err = conn.Write(buf)
@@ -199,7 +199,7 @@ func outgoingDNSQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessa
 	var p dnsmessage.Parser
 	header, err := p.Start(answer[:n])
 	if err != nil {
-		return nil, nil, fmt.Errorf("parser start error: %s", err)
+		return nil, nil, fmt.Errorf("parser start error: %w", err)
 	}
 
 	questions, err := p.AllQuestions()
