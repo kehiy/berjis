@@ -1,4 +1,4 @@
-package logger
+package log
 
 import (
 	"encoding/hex"
@@ -17,7 +17,7 @@ func addFields(event *zerolog.Event, keyvals ...interface{}) *zerolog.Event {
 		if !ok {
 			key = "!INVALID-KEY!"
 		}
-		///
+
 		switch v := keyvals[i+1].(type) {
 		case fmt.Stringer:
 			event.Stringer(key, v)
