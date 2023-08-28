@@ -8,17 +8,20 @@ import (
 	"net"
 	"strings"
 
-	"github.com/kehiy/berjis/logger"
+	"github.com/kehiy/berjis/log"
 	"golang.org/x/net/dns/dnsmessage"
 )
 
-const ROOTSERVERS = `198.41.0.4,199.9.14.201,192.33.4.12,199.7.91.13,
-					 192.203.230.10,192.5.5.241,192.112.36.4,198.97.190.53`
+const (
+	ROOTSERVERS = `198.41.0.4,199.9.14.201,192.33.4.12,199.7.91.13,
+				   192.203.230.10,192.5.5.241,192.112.36.4,198.97.190.53`
+	MAXPACKETSIZE = 512
+)
 
 func HandlePacketOut(pc net.PacketConn, addr net.Addr, buf []byte) {
 	//* send incoming packets to handlePacket function
 	if err := HandlePacketIn(pc, addr, buf); err != nil {
-		fmt.Printf("handlePacket error [%s]: %s\n", addr.String(), err)
+		log.Error("handlePacket error", "address", addr.String(), "error", err)
 	}
 }
 
@@ -55,7 +58,7 @@ func HandlePacketIn(pc net.PacketConn, addr net.Addr, buf []byte) error {
 }
 
 func DNSQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessage.Message, error) {
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 3; i++ { //* 3 times
 		dnsAnswer, header, err := OutgoingDNSQuery(servers, question)
 		if err != nil {
 			return nil, err
@@ -66,10 +69,10 @@ func DNSQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessage.Messa
 			return nil, err
 		}
 
-		//! if the header is Authoritative we send the ip's back here.
+		//! if the header is Authoritative we send the IP's back here.
 		if header.Authoritative {
 			return &dnsmessage.Message{
-				Header:  dnsmessage.Header{Response: true},
+				Header:  dnsmessage.Header{Response: true, RCode: dnsmessage.RCodeSuccess},
 				Answers: parsedAnswers,
 			}, nil
 		}
@@ -88,9 +91,9 @@ func DNSQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessage.Messa
 
 		//* get name servers in the response
 		nameservers := make([]string, len(authorities))
-		for k, authority := range authorities {
+		for i, authority := range authorities {
 			if authority.Header.Type == dnsmessage.TypeNS {
-				nameservers[k] = authority.Body.(*dnsmessage.NSResource).NS.String()
+				nameservers[i] = authority.Body.(*dnsmessage.NSResource).NS.String()
 			}
 		}
 
@@ -123,7 +126,7 @@ func DNSQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessage.Messa
 							Type: dnsmessage.TypeA, Class: dnsmessage.ClassINET,
 						})
 					if err != nil {
-						logger.Warn("lookup of nameserver failed", "nameserver", nameserver, "error", err)
+						log.Warn("lookup of nameservers failed", "nameservers", nameserver, "error", err)
 					} else {
 						newResolverServersFound = true
 						for _, answer := range response.Answers {
@@ -179,7 +182,7 @@ func OutgoingDNSQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessa
 		}
 	}
 	if conn == nil {
-		return nil, nil, fmt.Errorf("faild to make connection to servers: %w", err)
+		return nil, nil, fmt.Errorf("failed to make connection to servers: %w", err)
 	}
 	// here we have the connection!
 	_, err = conn.Write(buf)
@@ -188,7 +191,7 @@ func OutgoingDNSQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessa
 	}
 
 	// read answer  from connection
-	answer := make([]byte, 512)
+	answer := make([]byte, MAXPACKETSIZE)
 	n, err := bufio.NewReader(conn).Read(answer)
 	if err != nil {
 		return nil, nil, err
@@ -207,7 +210,7 @@ func OutgoingDNSQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessa
 		return nil, nil, err
 	}
 	if len(questions) != len(msg.Questions) {
-		return nil, nil, fmt.Errorf("answer packet dosen't have the same amount of questions")
+		return nil, nil, fmt.Errorf("answer packet doesn't have the same amount of questions")
 	}
 
 	err = p.SkipAllQuestions()
@@ -218,7 +221,7 @@ func OutgoingDNSQuery(servers []net.IP, question dnsmessage.Question) (*dnsmessa
 	return &p, &header, nil
 }
 
-// * make a loop over ROOT SERVERS list and return a slice of root servers ip.
+// * make a loop over ROOT SERVERS list and return a slice of root servers IP.
 func getRootServers() []net.IP {
 	rootServers := []net.IP{}
 	for _, rootServer := range strings.Split(ROOTSERVERS, ",") {

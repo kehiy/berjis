@@ -1,12 +1,12 @@
-package logger_test
+package log_test
 
 import (
 	"bytes"
 	"fmt"
 	"testing"
 
-	"github.com/kehiy/berjis/logger"
-	"github.com/rs/zerolog/log"
+	"github.com/kehiy/berjis/log"
+	zlog "github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,14 +18,14 @@ func (f Foo) String() string {
 
 func TestLogger(t *testing.T) {
 	var buf bytes.Buffer
-	log.Logger = log.Output(&buf)
+	zlog.Logger = zlog.Output(&buf)
 
-	logger.Trace("a", "ok", "!ok")
-	logger.Info("b", nil)
-	logger.Info("b", "a", nil)
-	logger.Info("c", "b", []byte{1, 2, 3})
-	logger.Warn("d", "x")
-	logger.Error("e", "y", Foo{})
+	log.Trace("a", "ok", "!ok")
+	log.Info("b", nil)
+	log.Info("b", "a", nil)
+	log.Info("c", "b", []byte{1, 2, 3})
+	log.Warn("d", "x")
+	log.Error("e", "y", Foo{})
 
 	out := buf.String()
 
