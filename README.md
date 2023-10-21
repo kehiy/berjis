@@ -1,3 +1,7 @@
+# !NOTE!
+> We are not working on this Temporarily due to a lack of time.
+> Send me an email if there is an issue. `kehiiiiya@gmail.com`
+
 # berjis-dns
 DNS written in Golang
 
